@@ -3,9 +3,9 @@ package main
 import (
   "flag"
   "fmt"
-)
 
-const Version = "0.0"
+  "github.com/jeady/lmk/lmk"
+)
 
 type VersionCommand struct{}
 
@@ -25,8 +25,8 @@ func (cmd *VersionCommand) PrintHelp() {
 
 func (cmd *VersionCommand) Init(f *flag.FlagSet) {}
 
-func (cmd *VersionCommand) Main() int {
-  fmt.Printf("lmk! %s\n", Version)
+func (cmd *VersionCommand) Main(_ *lmk.Engine) int {
+  fmt.Printf("lmk! %s\n", lmk.Version())
   fmt.Printf("Copyright (c) 2013 James Eady\n")
 
   return 0

@@ -5,14 +5,10 @@ import (
   "fmt"
   "os"
 
-  "github.com/op/go-logging"
+  "github.com/jeady/lmk/lmk"
 )
 
-var log = logging.MustGetLogger("lmk.main")
-
 func main() {
-  logging.SetLevel(logging.DEBUG, "lmk.main")
-  log.Debug("Starting lmk!")
   flag.Parse()
 
   cmd_name := "help"
@@ -30,8 +26,18 @@ func main() {
     if cmd.Name() == cmd_name {
       f := flag.NewFlagSet(cmd.Name(), flag.ExitOnError)
       cmd.Init(f)
+
+      var config_filename string
+      f.StringVar(
+        &config_filename,
+        "config",
+        "lmk.cfg",
+        "The configuration file to use")
+
       f.Parse(flag.Args()[1:])
-      os.Exit(cmd.Main())
+      e := lmk.NewEngine(config_filename)
+
+      os.Exit(cmd.Main(e))
     }
   }
 
@@ -53,7 +59,7 @@ func main() {
   fmt.Println("")
   fmt.Println("Usage:")
   fmt.Println("")
-  fmt.Println("    lmk command [arguments] [-c configfile]")
+  fmt.Println("    lmk command [arguments] [--config configfile]")
   fmt.Println("")
   fmt.Println("The commands are:")
   fmt.Println("")
