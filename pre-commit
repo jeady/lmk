@@ -1,0 +1,50 @@
+#!/bin/sh
+
+go build -o .lmk >/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+  echo >&2 "Failed to build project. Please fix before committing."
+  exit 1
+fi
+rm .lmk
+
+go test ./... >/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+  echo >&2 "Failed to run tests. Please fix before committing."
+  exit 1
+fi
+
+go vet >/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+  echo >&2 "Go vet detected issues. Please fix before committing."
+  exit 1
+fi
+
+
+# git gofmt pre-commit hook
+#
+# Copyright 2012 The Go Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license.
+
+gofiles=$(git diff --cached --name-only --diff-filter=ACM | grep '.go$')
+[ -z "$gofiles" ] && exit 0
+
+unformatted=$(gofmt -tabs=false -tabwidth=2 -l $gofiles)
+if [ -n "$unformatted" ]
+then
+  # Some files are not gofmt'd. Print message and fail.
+
+  echo >&2 "Go files must be formatted with gofmt. Please run:"
+  for fn in $unformatted; do
+    echo >&2 "  gofmt -w -tabs=false -tabwidth=2 $PWD/$fn"
+  done
+
+  exit 1
+fi
+
+echo "All pre-commit checks have passed."
+
+exit 0
