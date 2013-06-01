@@ -9,7 +9,7 @@ type Engine struct {
 func NewEngine(config_file string) *Engine {
   var err error
   e := new(Engine)
-  e.conf, err = new_config(config_file)
+  e.conf, err = NewConfig(config_file)
 
   if e.conf == nil {
     log.Error("Unable to load configuration file: " + err.Error())
