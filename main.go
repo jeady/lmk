@@ -18,6 +18,7 @@ func main() {
   }
 
   commands := []Command{
+    new(ListRulesCommand),
     new(VersionCommand),
   }
 

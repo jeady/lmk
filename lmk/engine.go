@@ -24,3 +24,7 @@ func NewEngine(config_file string) *Engine {
 
   return e
 }
+
+func (e *Engine) Rules() []Rule {
+  return e.conf.Rules()
+}
