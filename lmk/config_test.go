@@ -70,89 +70,135 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123\nenabled=true",
     func(conf *Config) {
-      valid, enabled := conf.parse_rule_config("RuleA", map[string]*string{
-        "foo": &foo,
-        "bar": &bar,
-        "baz": &baz,
-      })
+      valid, enabled, opts := conf.parse_rule_config(
+        "RuleA",
+        map[string]*string{
+          "foo": &foo,
+          "bar": &bar,
+          "baz": &baz,
+        },
+        []string{})
       c.Check(valid, Equals, true)
       c.Check(enabled, Equals, true)
       c.Check(foo, Equals, "abc")
       c.Check(bar, Equals, "def")
       c.Check(baz, Equals, "123")
+      c.Check(len(opts), Equals, 0)
     })
 
   // Bunch of extra fields.
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123\nenabled=true",
     func(conf *Config) {
-      valid, enabled := conf.parse_rule_config("RuleA", map[string]*string{})
+      valid, enabled, opts := conf.parse_rule_config(
+        "RuleA",
+        map[string]*string{},
+        []string{})
       c.Check(valid, Equals, true)
       c.Check(enabled, Equals, true)
       c.Check(memlog.Logs(), Matches, `[\s\S]*foo[\s\S]*`)
       c.Check(memlog.Logs(), Matches, `[\s\S]*bar[\s\S]*`)
       c.Check(memlog.Logs(), Matches, `[\s\S]*baz[\s\S]*`)
+      c.Check(len(opts), Equals, 0)
     })
 
   // Missing required field.
   test_parse_rule_config(
     "[RuleA]\nenabled=true",
     func(conf *Config) {
-      valid, enabled := conf.parse_rule_config("RuleA", map[string]*string{
-        "foo": &bar,
-      })
+      valid, enabled, opts := conf.parse_rule_config(
+        "RuleA",
+        map[string]*string{
+          "foo": &bar,
+        },
+        []string{})
       c.Check(valid, Equals, false)
       c.Check(enabled, Equals, true)
       c.Check(foo, Equals, "")
+      c.Check(len(opts), Equals, 0)
     })
 
   // Disabled due to missing enabled field.
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123",
     func(conf *Config) {
-      valid, enabled := conf.parse_rule_config("RuleA", map[string]*string{
-        "foo": &foo,
-        "bar": &bar,
-        "baz": &baz,
-      })
+      valid, enabled, opts := conf.parse_rule_config(
+        "RuleA",
+        map[string]*string{
+          "foo": &foo,
+          "bar": &bar,
+          "baz": &baz,
+        },
+        []string{})
       c.Check(valid, Equals, true)
       c.Check(enabled, Equals, false)
       c.Check(foo, Equals, "abc")
       c.Check(bar, Equals, "def")
       c.Check(baz, Equals, "123")
+      c.Check(len(opts), Equals, 0)
     })
 
   // Disabled due to enabled=false.
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123\nenabled=false",
     func(conf *Config) {
-      valid, enabled := conf.parse_rule_config("RuleA", map[string]*string{
-        "foo": &foo,
-        "bar": &bar,
-        "baz": &baz,
-      })
+      valid, enabled, opts := conf.parse_rule_config(
+        "RuleA",
+        map[string]*string{
+          "foo": &foo,
+          "bar": &bar,
+          "baz": &baz,
+        },
+        []string{})
       c.Check(valid, Equals, true)
       c.Check(enabled, Equals, false)
       c.Check(foo, Equals, "abc")
       c.Check(bar, Equals, "def")
       c.Check(baz, Equals, "123")
+      c.Check(len(opts), Equals, 0)
     })
 
   // Mising section.
   test_parse_rule_config(
     "[RuleB]\nfoo=abc\nbar=def\nbaz=123\nenabled=true",
     func(conf *Config) {
-      valid, enabled := conf.parse_rule_config("RuleA", map[string]*string{
-        "foo": &foo,
-        "bar": &bar,
-        "baz": &baz,
-      })
+      valid, enabled, opts := conf.parse_rule_config(
+        "RuleA",
+        map[string]*string{
+          "foo": &foo,
+          "bar": &bar,
+          "baz": &baz,
+        },
+        []string{})
       c.Check(valid, Equals, false)
       c.Check(enabled, Equals, false)
       c.Check(foo, Equals, "")
       c.Check(bar, Equals, "")
       c.Check(baz, Equals, "")
+      c.Check(len(opts), Equals, 0)
     })
+
+  // Optional fields.
+  test_parse_rule_config(
+    "[RuleA]\nfoo=abc\nbar=def\nbaz=123\nenabled=true\nhello=goodbye",
+    func(conf *Config) {
+      valid, enabled, opts := conf.parse_rule_config(
+        "RuleA",
+        map[string]*string{
+          "foo": &foo,
+          "bar": &bar,
+          "baz": &baz,
+        },
+        []string{"hello", "world"})
+      c.Check(valid, Equals, true)
+      c.Check(enabled, Equals, true)
+      c.Check(foo, Equals, "abc")
+      c.Check(bar, Equals, "def")
+      c.Check(baz, Equals, "123")
+      c.Check(len(opts), Equals, 1)
+      c.Check(opts["hello"], Equals, "goodbye")
+    })
+
 }
 
 func (t *ConfigTest) TestConfigFileDoesNotExist(c *C) {

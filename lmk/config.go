@@ -37,16 +37,17 @@ func NewConfig(filename string) (*Config, error) {
     }
 
     var url, sanity, trigger string
-    valid, enabled := c.parse_rule_config(
+    valid, enabled, opts := c.parse_rule_config(
       name,
       map[string]*string{
         "url":     &url,
         "sanity":  &sanity,
         "trigger": &trigger,
-      })
+      },
+      []string{})
 
     if valid && enabled {
-      c.rules = append(c.rules, NewWebRule(name, url, sanity, trigger))
+      c.rules = append(c.rules, NewWebRule(name, url, sanity, trigger, opts))
       log.Notice("%s: Loaded WebRule", name)
     } else {
       log.Notice("%s: Ignoring rule.", name)
@@ -65,9 +66,11 @@ func NewConfig(filename string) (*Config, error) {
 func (c *Config) parse_rule_config(
   name string,
   required map[string]*string,
-) (valid bool, enabled bool) {
+  optional []string,
+) (valid bool, enabled bool, options map[string]string) {
   var err error
   valid = true
+  options = make(map[string]string)
 
   if !c.file.HasSection(name) {
     log.Error("Could not find section '" + name + "'")
@@ -97,10 +100,20 @@ func (c *Config) parse_rule_config(
     }
   }
 
+  for _, opt := range optional {
+    val, err := c.file.GetString(name, opt)
+
+    if err == nil {
+      options[opt] = val
+    }
+  }
+
   // Output debugging notices about any unknown options
   opts, _ := c.file.GetOptions(name)
   for _, opt := range opts {
-    if _, ok := required[opt]; !ok && opt != "enabled" {
+    _, in_required := required[opt]
+    _, in_optional := options[opt]
+    if !in_required && !in_optional && opt != "enabled" {
       log.Notice("%s: ignoring unknown option '%s'.", name, opt)
     }
   }
