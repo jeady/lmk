@@ -44,7 +44,7 @@ func NewConfig(filename string) (*Config, error) {
         "sanity":  &sanity,
         "trigger": &trigger,
       },
-      []string{})
+      []string{"case-sensitive"})
 
     if valid && enabled {
       c.rules = append(c.rules, NewWebRule(name, url, sanity, trigger, opts))

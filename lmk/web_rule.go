@@ -40,7 +40,7 @@ func (r *WebRule) Name() string {
 func (r *WebRule) set_options(opts map[string]string) {
   for k, v := range opts {
     switch k {
-    case "case_sensitive":
+    case "case-sensitive":
       b, err := strconv.ParseBool(v)
       if err == nil {
         r.case_sensitive = b
