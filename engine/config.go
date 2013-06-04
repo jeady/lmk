@@ -43,17 +43,17 @@ func NewConfig(filename string) (*Config, error) {
     }
 
     var url, sanity, trigger string
-    valid, enabled, _ := c.parse_rule_config(
+    valid, enabled, opts := c.parse_rule_config(
       name,
       map[string]*string{
         "url":     &url,
         "sanity":  &sanity,
         "trigger": &trigger,
       },
-      []string{})
+      []string{"trigger-on-match"})
 
     if valid && enabled {
-      r := NewWebRule(name, url, sanity, trigger)
+      r := NewWebRule(name, url, sanity, trigger, opts)
       if r != nil {
         c.rules = append(c.rules, r)
         log.Notice("%s: Loaded WebRule", name)
