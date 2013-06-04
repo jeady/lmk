@@ -1,9 +1,9 @@
 #!/bin/sh
 
-go build -o .lmk github.com/jeady/lmk/main >/dev/null 2>&1
+go build -o .lmk github.com/jeady/lmk/lmk >/dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  go build -o .lmk github.com/jeady/lmk/main 1>&2
+  go build -o .lmk github.com/jeady/lmk/lmk 1>&2
   echo >&2 "Failed to build project. Please fix before committing."
 
   exit 1
