@@ -1,0 +1,17 @@
+# This section contains global program parameters.
+[Global]
+loglevel=notice
+smtp_user=jon
+smtp_host=smtp.gmail.com:587
+smtp_pass=hunter2
+recipient=jon@snow.com
+
+# This is an example a rule that will trigger when the Google homepage has a
+# doodle instead of just the normal logo.
+[Google Logo]
+url=http://www.google.com/    # the url to fetch and apply sanity/trigger to.
+sanity=Google                 # a valid Golang regex that should always match.
+trigger=logo4w.png            # regex used to trigger a notification.
+trigger-on-match=no           # defaults to yes. When no, notifies when trigger
+                              # does _not_ match.
+enabled=yes                   # required, as rules are not enabled by default.
