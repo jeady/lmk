@@ -4,7 +4,7 @@ import (
   "flag"
   "fmt"
 
-  "github.com/jeady/lmk/lmk"
+  . "github.com/jeady/lmk/engine"
 )
 
 type TestSmtpCommand struct {
@@ -31,7 +31,7 @@ func (cmd *TestSmtpCommand) Init(f *flag.FlagSet) {
   cmd.flags = f
 }
 
-func (cmd *TestSmtpCommand) Main(e *lmk.Engine) int {
+func (cmd *TestSmtpCommand) Main(e *Engine) int {
   if cmd.flags.NArg() < 1 {
     cmd.PrintHelp()
     return 1

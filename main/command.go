@@ -3,7 +3,7 @@ package main
 import (
   "flag"
 
-  "github.com/jeady/lmk/lmk"
+  . "github.com/jeady/lmk/engine"
 )
 
 type Command interface {
@@ -12,5 +12,5 @@ type Command interface {
   PrintHelp()
 
   Init(*flag.FlagSet)
-  Main(*lmk.Engine) int
+  Main(*Engine) int
 }

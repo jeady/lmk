@@ -4,7 +4,7 @@ import (
   "flag"
   "fmt"
 
-  "github.com/jeady/lmk/lmk"
+  . "github.com/jeady/lmk/engine"
 )
 
 type ListRulesCommand struct{}
@@ -25,7 +25,7 @@ func (cmd *ListRulesCommand) PrintHelp() {
 
 func (cmd *ListRulesCommand) Init(f *flag.FlagSet) {}
 
-func (cmd *ListRulesCommand) Main(e *lmk.Engine) int {
+func (cmd *ListRulesCommand) Main(e *Engine) int {
   fmt.Println("Enabled rules:")
   for _, rule := range e.Rules() {
     fmt.Println("  ", rule.Name())

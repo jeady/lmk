@@ -5,7 +5,7 @@ import (
   "fmt"
   "os"
 
-  "github.com/jeady/lmk/lmk"
+  . "github.com/jeady/lmk/engine"
 )
 
 func main() {
@@ -39,7 +39,7 @@ func main() {
         "The configuration file to use")
 
       f.Parse(flag.Args()[1:])
-      e := lmk.NewEngine(config_filename)
+      e := NewEngine(config_filename)
 
       os.Exit(cmd.Main(e))
     }

@@ -1,4 +1,4 @@
-package lmk
+package engine
 
 type Rule interface {
   Name() string

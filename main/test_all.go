@@ -4,7 +4,7 @@ import (
   "flag"
   "fmt"
 
-  "github.com/jeady/lmk/lmk"
+  . "github.com/jeady/lmk/engine"
 )
 
 type TestAllCommand struct {
@@ -29,7 +29,7 @@ func (cmd *TestAllCommand) Init(f *flag.FlagSet) {
   cmd.flags = f
 }
 
-func (cmd *TestAllCommand) Main(e *lmk.Engine) int {
+func (cmd *TestAllCommand) Main(e *Engine) int {
   for _, rule := range e.Rules() {
     sane, triggered := rule.TestTriggered()
     if !sane {

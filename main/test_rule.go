@@ -5,7 +5,7 @@ import (
   "fmt"
   "strings"
 
-  "github.com/jeady/lmk/lmk"
+  . "github.com/jeady/lmk/engine"
 )
 
 type TestRulesCommand struct {
@@ -34,11 +34,11 @@ func (cmd *TestRulesCommand) Init(f *flag.FlagSet) {
   cmd.flags = f
 }
 
-func (cmd *TestRulesCommand) Main(e *lmk.Engine) int {
-  rules := make([]lmk.Rule, 0)
+func (cmd *TestRulesCommand) Main(e *Engine) int {
+  rules := make([]Rule, 0)
   for _, name := range cmd.flags.Args() {
     lname := strings.ToLower(name)
-    r := make([]lmk.Rule, 0)
+    r := make([]Rule, 0)
     for _, rule := range e.Rules() {
       if strings.Contains(strings.ToLower(rule.Name()), lname) {
         r = append(r, rule)

@@ -1,4 +1,4 @@
-package lmk
+package engine
 
 import (
   "errors"
