@@ -8,33 +8,33 @@ import (
   . "github.com/jeady/lmk/engine"
 )
 
-type TestRulesCommand struct {
+type TestCommand struct {
   flags *flag.FlagSet
 }
 
-func (cmd *TestRulesCommand) Name() string {
-  return "test-rule"
+func (cmd *TestCommand) Name() string {
+  return "test"
 }
 
-func (cmd *TestRulesCommand) Description() string {
+func (cmd *TestCommand) Description() string {
   return "Tests if the given rules are sane and/or triggered"
 }
 
-func (cmd *TestRulesCommand) PrintHelp() {
-  fmt.Println("usage: lmk test-rule $rule-name-1 ...")
+func (cmd *TestCommand) PrintHelp() {
+  fmt.Println("usage: lmk test $rule-name-1 ...")
   fmt.Println("")
-  fmt.Println("test-rule tests the specified rules and prints whether they")
-  fmt.Println("are sane and/or triggered.")
+  fmt.Println("test tests the specified rules and prints whether they are")
+  fmt.Println("sane and/or triggered. test does NOT send out notifications.")
   fmt.Println("")
   fmt.Println("$rule-name may be any unambiguous case-insensitive subset of")
   fmt.Println("the rule's name.")
 }
 
-func (cmd *TestRulesCommand) Init(f *flag.FlagSet) {
+func (cmd *TestCommand) Init(f *flag.FlagSet) {
   cmd.flags = f
 }
 
-func (cmd *TestRulesCommand) Main(e *Engine) int {
+func (cmd *TestCommand) Main(e *Engine) int {
   rules := make([]Rule, 0)
   for _, name := range cmd.flags.Args() {
     lname := strings.ToLower(name)
