@@ -23,6 +23,7 @@ func main() {
     new(TestAllCommand),
     new(TestSmtpCommand),
     new(RunCommand),
+    new(RunAllCommand),
     new(VersionCommand),
   }
 
