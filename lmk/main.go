@@ -22,6 +22,7 @@ func main() {
     new(TestCommand),
     new(TestAllCommand),
     new(TestSmtpCommand),
+    new(RunCommand),
     new(VersionCommand),
   }
 
