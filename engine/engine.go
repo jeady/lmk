@@ -42,6 +42,7 @@ func (e *Engine) EmailNotification(recipient, subj, msg string) error {
     return errors.New("SMTP is not configured.")
   }
 
+  log.Info("Attempting to mail %s", recipient)
   err := smtp.SendMail(
     host,
     smtp.PlainAuth("", user, pass, strings.Split(host, ":")[0]),
@@ -54,4 +55,26 @@ func (e *Engine) EmailNotification(recipient, subj, msg string) error {
   }
 
   return err
+}
+
+// Tests the rule and sends out a notification if the rule is not sane or has
+// been triggered.
+func (e *Engine) Run(r Rule) {
+  sane, triggered := r.TestTriggered()
+
+  if !sane {
+    log.Info("Rule '%s' is not sane, notifying.", r.Name())
+    e.EmailNotification(
+      e.conf.NotificationRecipient(),
+      "[lmk] '"+r.Name()+"' is not sane <eom>",
+      "")
+  } else if triggered {
+    log.Info("Rule '%s' has been triggered, notifying.", r.Name())
+    e.EmailNotification(
+      e.conf.NotificationRecipient(),
+      "[lmk] '"+r.Name()+"' has been triggered <eom>",
+      "")
+  } else {
+    log.Debug("Rule '%s' is dormant.", r.Name())
+  }
 }

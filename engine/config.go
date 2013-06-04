@@ -12,8 +12,9 @@ type Config struct {
   smtp_pass string
   smtp_host string
 
-  loglevel string
-  rules    []Rule
+  recipient string
+  loglevel  string
+  rules     []Rule
 }
 
 func NewConfig(filename string) (*Config, error) {
@@ -32,6 +33,7 @@ func NewConfig(filename string) (*Config, error) {
   c.smtp_user = c.get_global("smtp_user", "")
   c.smtp_pass = c.get_global("smtp_pass", "")
   c.smtp_host = c.get_global("smtp_host", "")
+  c.recipient = c.get_global("recipient", "")
 
   // Parse the rules.
   log.Notice("Rules:")
@@ -138,6 +140,10 @@ func (c *Config) SmtpConfig() (user, pass, host string) {
   pass = c.smtp_pass
   host = c.smtp_host
   return
+}
+
+func (c *Config) NotificationRecipient() string {
+  return c.recipient
 }
 
 func (c *Config) LogLevel() string {
