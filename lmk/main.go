@@ -9,6 +9,18 @@ import (
 )
 
 func main() {
+  var config_filename string
+  flag.StringVar(
+    &config_filename,
+    "config",
+    "lmk.cfg",
+    "The configuration file to use")
+  flag.StringVar(
+    &config_filename,
+    "c",
+    "lmk.cfg",
+    "The configuration file to use (short form)")
+
   flag.Parse()
 
   cmd_name := "help"
@@ -33,14 +45,6 @@ func main() {
       f := flag.NewFlagSet(cmd.Name(), flag.ExitOnError)
       cmd.Init(f)
 
-      var config_filename string
-      f.StringVar(
-        &config_filename,
-        "config",
-        "lmk.cfg",
-        "The configuration file to use")
-
-      f.Parse(flag.Args()[1:])
       e := NewEngine(config_filename)
 
       os.Exit(cmd.Main(e))
