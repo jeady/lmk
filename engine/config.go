@@ -43,18 +43,23 @@ func NewConfig(filename string) (*Config, error) {
     }
 
     var url, sanity, trigger string
-    valid, enabled, opts := c.parse_rule_config(
+    valid, enabled, _ := c.parse_rule_config(
       name,
       map[string]*string{
         "url":     &url,
         "sanity":  &sanity,
         "trigger": &trigger,
       },
-      []string{"case-sensitive"})
+      []string{})
 
     if valid && enabled {
-      c.rules = append(c.rules, NewWebRule(name, url, sanity, trigger, opts))
-      log.Notice("%s: Loaded WebRule", name)
+      r := NewWebRule(name, url, sanity, trigger)
+      if r != nil {
+        c.rules = append(c.rules, r)
+        log.Notice("%s: Loaded WebRule", name)
+      } else {
+        log.Error(name + ": Unable to load WebRule")
+      }
     } else {
       log.Notice("%s: Ignoring rule.", name)
     }

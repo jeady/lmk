@@ -3,35 +3,47 @@ package engine
 import (
   "io/ioutil"
   "net/http"
-  "strconv"
-  "strings"
+  "regexp"
 )
 
 type WebRule struct {
   name string
 
+  // Required params.
   url           string
   sanity_check  string
   trigger_check string
 
-  case_sensitive bool
+  // Internal state.
+  sanity_regex  *regexp.Regexp
+  trigger_regex *regexp.Regexp
 }
 
 func NewWebRule(
   name string,
   url string,
   sanity_check string,
-  trigger_check string,
-  opts map[string]string) *WebRule {
+  trigger_check string) *WebRule {
 
   r := &WebRule{
-    name:           name,
-    url:            url,
-    sanity_check:   sanity_check,
-    trigger_check:  trigger_check,
-    case_sensitive: false,
+    name:          name,
+    url:           url,
+    sanity_check:  sanity_check,
+    trigger_check: trigger_check,
   }
-  r.set_options(opts)
+
+  var err error
+  r.sanity_regex, err = regexp.Compile(sanity_check)
+  if err != nil {
+    log.Warning("%s: Unable to compile sanity regex.", name)
+    return nil
+  }
+
+  r.trigger_regex, err = regexp.Compile(trigger_check)
+  if err != nil {
+    log.Warning("%s: Unable to compile trigger regex.", name)
+    return nil
+  }
   return r
 }
 
@@ -39,37 +51,16 @@ func (r *WebRule) Name() string {
   return r.name
 }
 
-// Sets optional parameters.
-// option: default_value
-// - case_sensitive: true
-func (r *WebRule) set_options(opts map[string]string) {
-  for k, v := range opts {
-    switch k {
-    case "case-sensitive":
-      b, err := strconv.ParseBool(v)
-      if err == nil {
-        r.case_sensitive = b
-      }
-    default:
-      log.Warning("WebRule: Unknown option '%s'", k)
-    }
-  }
-}
-
-func (r *WebRule) contains(content, substr string) bool {
-  if !r.case_sensitive {
-    content = strings.ToLower(content)
-    substr = strings.ToLower(substr)
-  }
-  return strings.Contains(content, substr)
+func (r *WebRule) matches(content string, re *regexp.Regexp) bool {
+  return re.Match([]byte(content))
 }
 
 func (r *WebRule) test_sane(page_content string) bool {
-  return r.contains(page_content, r.sanity_check)
+  return r.matches(page_content, r.sanity_regex)
 }
 
 func (r *WebRule) test_triggered(page_content string) bool {
-  return r.contains(page_content, r.trigger_check)
+  return r.matches(page_content, r.trigger_regex)
 }
 
 func (r *WebRule) TestTriggered() (sane, triggered bool) {

@@ -2,12 +2,9 @@ package engine
 
 import (
   "fmt"
-  go_log "log"
   "net/http"
   "net/http/httptest"
-  "os"
 
-  "github.com/op/go-logging"
   . "launchpad.net/gocheck"
 )
 
@@ -16,36 +13,9 @@ type WebRuleTest struct{}
 var _ = Suite(&WebRuleTest{})
 
 func (t *WebRuleTest) TestName(c *C) {
-  r := NewWebRule("a", "b", "c", "d", map[string]string{})
+  r := NewWebRule("a", "b", "c", "d")
 
   c.Check(r.Name(), Equals, "a")
-}
-
-func (t *WebRuleTest) TestCaseSensitivity(c *C) {
-  // Test that WebRules are case insensitive by default.
-  r := NewWebRule("a", "b", "c", "d", map[string]string{})
-  c.Check(r.contains("cat", "A"), Equals, true)
-
-  // Test to ensure case-insensitive mode works.
-  r = NewWebRule("a", "b", "c", "d", map[string]string{
-    "case-sensitive": "true",
-  })
-  c.Check(r.contains("cat", "A"), Equals, false)
-}
-
-func (t *WebRuleTest) TestUnknownOption(c *C) {
-  memlog := new(TestingLogger)
-  logging.SetBackend(memlog)
-  defer logging.SetBackend(
-    logging.NewLogBackend(os.Stderr, "", go_log.LstdFlags))
-
-  logging.SetLevel(logging.DEBUG, log.Module)
-
-  NewWebRule("a", "b", "c", "d", map[string]string{
-    "foobar": "true",
-  })
-  c.Check(memlog.Logs(), Matches, `[\s\S]*foobar[\s\S]*`)
-  c.Check(memlog.Logs(), Matches, `[\s\S]*[uU]nknown[\s\S]*`)
 }
 
 func test_web_rule(
@@ -62,8 +32,7 @@ func test_web_rule(
     "test rule",
     s.URL,
     sanity,
-    trigger,
-    map[string]string{})
+    trigger)
 
   sane, triggered = r.TestTriggered()
   return
@@ -96,8 +65,7 @@ func (t *WebRuleTest) TestHandleHttpFailures(c *C) {
     "test rule",
     s.URL,
     "cats",
-    "dogs",
-    map[string]string{})
+    "dogs")
 
   sane, triggered := r.TestTriggered()
   c.Check(sane, Equals, false)
