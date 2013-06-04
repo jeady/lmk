@@ -8,6 +8,10 @@ type Config struct {
   filename string
   file     *goconfig.ConfigFile
 
+  smtp_user string
+  smtp_pass string
+  smtp_host string
+
   loglevel string
   rules    []Rule
 }
@@ -24,10 +28,10 @@ func NewConfig(filename string) (*Config, error) {
   }
 
   // Read the global section.
-  c.loglevel, err = c.file.GetString("global", "loglevel")
-  if err != nil {
-    c.loglevel = "Notice"
-  }
+  c.loglevel = c.get_global("loglevel", "Notice")
+  c.smtp_user = c.get_global("smtp_user", "")
+  c.smtp_pass = c.get_global("smtp_pass", "")
+  c.smtp_host = c.get_global("smtp_host", "")
 
   // Parse the rules.
   log.Notice("Rules:")
@@ -56,6 +60,14 @@ func NewConfig(filename string) (*Config, error) {
   log.Notice("")
 
   return c, nil
+}
+
+func (c *Config) get_global(option, default_val string) string {
+  result, err := c.file.GetString("global", option)
+  if err != nil {
+    return default_val
+  }
+  return result
 }
 
 // Given a rule name and string => *string map, parses the config file and
@@ -118,6 +130,13 @@ func (c *Config) parse_rule_config(
     }
   }
 
+  return
+}
+
+func (c *Config) SmtpConfig() (user, pass, host string) {
+  user = c.smtp_user
+  pass = c.smtp_pass
+  host = c.smtp_host
   return
 }
 

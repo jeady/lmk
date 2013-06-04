@@ -21,6 +21,7 @@ func main() {
     new(ListRulesCommand),
     new(TestRulesCommand),
     new(TestAllCommand),
+    new(TestSmtpCommand),
     new(VersionCommand),
   }
 
