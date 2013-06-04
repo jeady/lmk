@@ -1,11 +1,3 @@
-# This section contains global program parameters.
-[Global]
-loglevel=notice
-smtp_user=jon
-smtp_host=smtp.gmail.com:587
-smtp_pass=hunter2
-recipient=jon@snow.com
-
 # This is an example a rule that will trigger when the Google homepage has a
 # doodle instead of just the normal logo.
 [Google Logo]

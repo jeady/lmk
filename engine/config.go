@@ -1,12 +1,15 @@
 package engine
 
 import (
+  "path/filepath"
+
   "github.com/msbranco/goconfig"
 )
 
 type Config struct {
-  filename string
-  file     *goconfig.ConfigFile
+  filename   string
+  file       *goconfig.ConfigFile
+  rules_file *goconfig.ConfigFile
 
   smtp_user string
   smtp_pass string
@@ -22,23 +25,35 @@ func NewConfig(filename string) (*Config, error) {
 
   // Attempt to read the configuration file.
   c := new(Config)
-  c.filename = filename
+  c.filename, _ = filepath.Abs(filename)
+  log.Debug("Config filename: %s", c.filename)
   c.file, err = goconfig.ReadConfigFile(c.filename)
   if c.file == nil {
     return nil, err
   }
 
-  // Read the global section.
-  c.loglevel = c.get_global("loglevel", "Notice")
-  c.smtp_user = c.get_global("smtp_user", "")
-  c.smtp_pass = c.get_global("smtp_pass", "")
-  c.smtp_host = c.get_global("smtp_host", "")
-  c.recipient = c.get_global("recipient", "")
+  // Make sure we can also read the rules file.
+  rules_filename := c.get_config("rules", "rules.conf")
+  if !filepath.IsAbs(rules_filename) {
+    rules_filename = filepath.Join(filepath.Dir(c.filename), rules_filename)
+  }
+  log.Debug("Rules filename: %s", rules_filename)
+  c.rules_file, err = goconfig.ReadConfigFile(rules_filename)
+  if c.rules_file == nil {
+    return nil, err
+  }
+
+  // Read the configuration.
+  c.loglevel = c.get_config("loglevel", "Notice")
+  c.smtp_user = c.get_config("smtp_user", "")
+  c.smtp_pass = c.get_config("smtp_pass", "")
+  c.smtp_host = c.get_config("smtp_host", "")
+  c.recipient = c.get_config("recipient", "")
 
   // Parse the rules.
   log.Notice("Rules:")
-  for _, name := range c.file.GetSections() {
-    if name == "global" || name == "default" {
+  for _, name := range c.rules_file.GetSections() {
+    if name == "default" {
       continue
     }
 
@@ -69,8 +84,8 @@ func NewConfig(filename string) (*Config, error) {
   return c, nil
 }
 
-func (c *Config) get_global(option, default_val string) string {
-  result, err := c.file.GetString("global", option)
+func (c *Config) get_config(option, default_val string) string {
+  result, err := c.file.GetString("settings", option)
   if err != nil {
     return default_val
   }
@@ -91,7 +106,7 @@ func (c *Config) parse_rule_config(
   valid = true
   options = make(map[string]string)
 
-  if !c.file.HasSection(name) {
+  if !c.rules_file.HasSection(name) {
     log.Error("Could not find section '" + name + "'")
     valid = false
     enabled = false
@@ -101,7 +116,7 @@ func (c *Config) parse_rule_config(
   log.Debug("Parsing rule '%s'", name)
 
   // Determine whether or not the rule is enabled.
-  enabled, err = c.file.GetBool(name, "enabled")
+  enabled, err = c.rules_file.GetBool(name, "enabled")
   if err != nil || !enabled {
     log.Notice("%s: not enabled.", name)
     enabled = false
@@ -109,7 +124,7 @@ func (c *Config) parse_rule_config(
 
   // Parse the options for the rule.
   for opt, valp := range required {
-    val, err := c.file.GetString(name, opt)
+    val, err := c.rules_file.GetString(name, opt)
 
     if err == nil {
       *valp = val
@@ -120,7 +135,7 @@ func (c *Config) parse_rule_config(
   }
 
   for _, opt := range optional {
-    val, err := c.file.GetString(name, opt)
+    val, err := c.rules_file.GetString(name, opt)
 
     if err == nil {
       options[opt] = val
@@ -128,7 +143,7 @@ func (c *Config) parse_rule_config(
   }
 
   // Output debugging notices about any unknown options
-  opts, _ := c.file.GetOptions(name)
+  opts, _ := c.rules_file.GetOptions(name)
   for _, opt := range opts {
     _, in_required := required[opt]
     _, in_optional := options[opt]

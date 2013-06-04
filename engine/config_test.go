@@ -13,17 +13,33 @@ type ConfigTest struct{}
 
 var _ = Suite(&ConfigTest{})
 
-func load_config(config_contents string, c *C) (conf *Config, f *os.File) {
-  f, err := ioutil.TempFile("", "")
+func load_config(
+  config string,
+  rules string,
+  c *C) (conf *Config, cleanup func()) {
+  var fconf, rconf *os.File
+  var err error
+
+  fconf, err = ioutil.TempFile("", "")
   if err != nil {
     panic(err)
   }
+  rconf, err = ioutil.TempFile("", "")
+  if err != nil {
+    panic(err)
+  }
+  cleanup = func() {
+    fconf.Close()
+    rconf.Close()
+  }
 
   // Trailing \n is required by go-config issue #3.
-  f.WriteString(config_contents + "\n")
-  f.Sync()
+  fconf.WriteString("[Settings]\n" + config + "\n" + "rules=" + rconf.Name() + "\n")
+  fconf.Sync()
+  rconf.WriteString(rules + "\n")
+  rconf.Sync()
 
-  conf, err = NewConfig(f.Name())
+  conf, err = NewConfig(fconf.Name())
   c.Assert(conf, Not(Equals), nil)
   c.Assert(err, Equals, nil)
   return
@@ -33,8 +49,8 @@ func (t *ConfigTest) TestParseLogLevel(c *C) {
 
   // Wrapper function.
   test_log_level := func(in string, expected string) {
-    conf, f := load_config("[Global]\n"+in, c)
-    defer func(f *os.File) { f.Close() }(f)
+    conf, cleanup := load_config(in, "", c)
+    defer cleanup()
 
     c.Check(conf.LogLevel(), Equals, expected)
   }
@@ -55,13 +71,13 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   logging.SetLevel(logging.DEBUG, log.Module)
   var foo, bar, baz string
 
-  test_parse_rule_config := func(config string, check func(conf *Config)) {
+  test_parse_rule_config := func(rules string, check func(conf *Config)) {
     foo = ""
     bar = ""
     baz = ""
     memlog.Reset()
-    conf, f := load_config("[Global]\nloglevel=info\n\n"+config, c)
-    defer func(f *os.File) { f.Close() }(f)
+    conf, cleanup := load_config("loglevel=info", rules, c)
+    defer cleanup()
 
     check(conf)
   }
@@ -216,27 +232,23 @@ func (t *ConfigTest) TestConfigFileDoesNotExist(c *C) {
 
 func (t *ConfigTest) TestLoadsWebRules(c *C) {
   // Valid rule.
-  conf, f := load_config(
-    "[Global]\n"+
-      "loglevel=debug\n"+
-      "\n"+
-      "[the rule]\n"+
+  conf, cleanup := load_config(
+    "loglevel=debug",
+    "[the rule]\n"+
       "url=http://google.com/\n"+
       "sanity=google\n"+
       "trigger=Mordor\n"+
       "enabled=true",
     c)
-  defer func(f *os.File) { f.Close() }(f)
+  defer func(c func()) { c() }(cleanup)
 
   c.Assert(len(conf.Rules()), Equals, 1)
   c.Check(conf.Rules()[0].Name(), Equals, "the rule")
 
   // Invalid rules.
-  conf, f = load_config(
-    "[Global]\n"+
-      "loglevel=debug\n"+
-      "\n"+
-      "[the rule]\n"+
+  conf, cleanup = load_config(
+    "loglevel=debug",
+    "[the rule]\n"+
       "sanity=google\n"+
       "trigger=Mordor\n"+
       "enabled=true\n"+
@@ -251,18 +263,16 @@ func (t *ConfigTest) TestLoadsWebRules(c *C) {
       "sanity=google\n"+
       "enabled=true",
     c)
-  defer func(f *os.File) { f.Close() }(f)
+  defer func(c func()) { c() }(cleanup)
 
   c.Assert(len(conf.Rules()), Equals, 0)
 }
 
 // Tests loading multiple rules, rules of different types.
 func (t *ConfigTest) TestLoadsRules(c *C) {
-  conf, f := load_config(
-    "[Global]\n"+
-      "loglevel=debug\n"+
-      "\n"+
-      "[the rule]\n"+
+  conf, cleanup := load_config(
+    "loglevel=debug",
+    "[the rule]\n"+
       "url=http://google.com/\n"+
       "sanity=google\n"+
       "trigger=Mordor\n"+
@@ -274,17 +284,15 @@ func (t *ConfigTest) TestLoadsRules(c *C) {
       "trigger=Mordor\n"+
       "enabled=true",
     c)
-  defer func(f *os.File) { f.Close() }(f)
+  defer func(c func()) { c() }(cleanup)
 
   c.Assert(len(conf.Rules()), Equals, 2)
   c.Check(conf.Rules()[0].Name(), Equals, "the rule")
   c.Check(conf.Rules()[1].Name(), Equals, "the rule 2")
 
-  conf, f = load_config(
-    "[Global]\n"+
-      "loglevel=debug\n"+
-      "\n"+
-      "[the rule]\n"+
+  conf, cleanup = load_config(
+    "loglevel=debug",
+    "[the rule]\n"+
       "url=http://google.com/\n"+
       "sanity=google\n"+
       "trigger=Mordor\n"+
@@ -296,7 +304,7 @@ func (t *ConfigTest) TestLoadsRules(c *C) {
       "trigger=Mordor\n"+
       "enabled=true",
     c)
-  defer func(f *os.File) { f.Close() }(f)
+  defer func(c func()) { c() }(cleanup)
 
   c.Assert(len(conf.Rules()), Equals, 1)
   c.Check(conf.Rules()[0].Name(), Equals, "the rule 2")

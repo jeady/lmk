@@ -1,0 +1,12 @@
+[Settings]
+# Logging level. Valid options are: debug, info, notice, warning, error,
+# and critical.
+loglevel=notice
+
+# Credentials to use to send out email notifications.
+smtp_user=jon
+smtp_host=smtp.gmail.com:587
+smtp_pass=hunter2
+
+# The default notifications recipient.
+recipient=jon@snow.com

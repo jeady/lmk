@@ -13,12 +13,12 @@ func main() {
   flag.StringVar(
     &config_filename,
     "config",
-    "lmk.cfg",
+    "lmk.conf",
     "The configuration file to use")
   flag.StringVar(
     &config_filename,
     "c",
-    "lmk.cfg",
+    "lmk.conf",
     "The configuration file to use (short form)")
 
   flag.Parse()
