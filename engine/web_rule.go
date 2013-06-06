@@ -1,8 +1,6 @@
 package engine
 
 import (
-  "io/ioutil"
-  "net/http"
   "regexp"
   "strconv"
 )
@@ -90,7 +88,7 @@ func (r *WebRule) test_triggered(page_content string) bool {
 }
 
 func (r *WebRule) TestTriggered() (sane, triggered bool) {
-  resp, err := http.Get(r.url)
+  page, err := GetUrl(r.url)
   if err != nil {
     log.Info("WebRule '%s' not sane because of error GET'ing page: %s",
       r.Name(),
@@ -99,19 +97,6 @@ func (r *WebRule) TestTriggered() (sane, triggered bool) {
     triggered = false
     return
   }
-  defer resp.Body.Close()
-
-  page_bytes, err := ioutil.ReadAll(resp.Body)
-  if err != nil {
-    log.Info("WebRule '%s' not sane because of error reading body: ",
-      r.Name(),
-      err)
-    sane = false
-    triggered = false
-    return
-  }
-
-  page := string(page_bytes)
 
   sane = r.test_sane(page)
   triggered = r.test_triggered(page)
