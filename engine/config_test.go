@@ -5,7 +5,7 @@ import (
   go_log "log"
   "os"
 
-  "github.com/op/go-logging"
+  "github.com/jeady/go-logging"
   . "launchpad.net/gocheck"
 )
 

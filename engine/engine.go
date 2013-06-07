@@ -5,7 +5,7 @@ import (
   "net/smtp"
   "strings"
 
-  "github.com/op/go-logging"
+  "github.com/jeady/go-logging"
 )
 
 type Engine struct {

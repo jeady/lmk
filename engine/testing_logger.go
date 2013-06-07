@@ -1,6 +1,6 @@
 package engine
 
-import "github.com/op/go-logging"
+import "github.com/jeady/go-logging"
 
 type TestingLogger struct {
   logs string
