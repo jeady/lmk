@@ -19,6 +19,7 @@ type WebRule struct {
   // Internal state.
   sanity_regex  *regexp.Regexp
   trigger_regex *regexp.Regexp
+  url_fetcher   UrlFetcher
 }
 
 // sanity_check and trigger_check should be valid regular expressions.
@@ -39,6 +40,7 @@ func NewWebRule(
     sanity_check:     sanity_check,
     trigger_check:    trigger_check,
     trigger_on_match: true,
+    url_fetcher:      &NetHttpFetcher{},
   }
   r.set_options(opts)
 
@@ -55,6 +57,12 @@ func NewWebRule(
     return nil
   }
   return r
+}
+
+func (r *WebRule) SetUrlFetcher(f UrlFetcher) UrlFetcher {
+  old := r.url_fetcher
+  r.url_fetcher = f
+  return old
 }
 
 func (r *WebRule) Name() string {
@@ -88,7 +96,7 @@ func (r *WebRule) test_triggered(page_content string) bool {
 }
 
 func (r *WebRule) TestTriggered() (sane, triggered bool) {
-  page, err := GetUrl(r.url)
+  page, err := r.url_fetcher.Get(r.url)
   if err != nil {
     log.Info("WebRule '%s' not sane because of error GET'ing page: %s",
       r.Name(),

@@ -7,19 +7,3 @@ package engine
 type UrlFetcher interface {
   Get(url string) (page string, err error)
 }
-
-func SetUrlFetcher(f UrlFetcher) UrlFetcher {
-  old := fetcher
-  fetcher = f
-  return old
-}
-
-func GetUrl(url string) (string, error) {
-  return fetcher.Get(url)
-}
-
-var fetcher UrlFetcher
-
-func init() {
-  fetcher = &NetHttpFetcher{}
-}
