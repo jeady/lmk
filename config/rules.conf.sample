@@ -4,6 +4,6 @@
 url=http://www.google.com/    # the url to fetch and apply sanity/trigger to.
 sanity=Google                 # a valid Golang regex that should always match.
 trigger=logo4w.png            # regex used to trigger a notification.
-trigger-on-match=no           # defaults to yes. When no, notifies when trigger
+trigger-on-match=false        # defaults to yes. When no, notifies when trigger
                               # does _not_ match.
-enabled=yes                   # required, as rules are not enabled by default.
+enabled=true                  # required, as rules are not enabled by default.
