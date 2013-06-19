@@ -33,7 +33,7 @@ func main() {
     new(ListRulesCommand),
     new(TestCommand),
     new(TestAllCommand),
-    new(TestSmtpCommand),
+    new(TestNotifyCommand),
     new(RunCommand),
     new(RunAllCommand),
     new(VersionCommand),
@@ -45,6 +45,7 @@ func main() {
       f := flag.NewFlagSet(cmd.Name(), flag.ExitOnError)
       cmd.Init(f)
 
+      f.Parse(flag.Args()[1:])
       e := NewEngine(config_filename)
 
       os.Exit(cmd.Main(e))

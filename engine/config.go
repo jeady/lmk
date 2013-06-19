@@ -1,6 +1,7 @@
 package engine
 
 import (
+  "errors"
   "path/filepath"
 
   "github.com/msbranco/goconfig"
@@ -25,7 +26,7 @@ func NewConfig(filename string) (*Config, error) {
 
   // Attempt to read the configuration file.
   c := new(Config)
-  c.filename, _ = filepath.Abs(filename)
+  c.filename = filename
   log.Debug("Config filename: %s", c.filename)
   c.file, err = goconfig.ReadConfigFile(c.filename)
   if c.file == nil {
@@ -128,6 +129,7 @@ func (c *Config) parse_rule_config(
 
     if err == nil {
       *valp = val
+      log.Debug("  R %s=%s", opt, val)
     } else {
       log.Notice("%s: missing required option '%s'.", name, opt)
       valid = false
@@ -139,6 +141,7 @@ func (c *Config) parse_rule_config(
 
     if err == nil {
       options[opt] = val
+      log.Debug("  O %s=%s", opt, val)
     }
   }
 
@@ -162,7 +165,16 @@ func (c *Config) SmtpConfig() (user, pass, host string) {
   return
 }
 
-func (c *Config) NotificationRecipient() string {
+func (c *Config) DefaultNotifier() (Notifier, error) {
+  if len(c.smtp_user) == 0 || len(c.smtp_host) == 0 {
+    return nil, errors.New(
+      "Could not create default notifier: SMTP credentials not specified.")
+  }
+
+  return NewSmtpNotifier(c.smtp_user, c.smtp_pass, c.smtp_host), nil
+}
+
+func (c *Config) DefaultNotificationRecipient() string {
   return c.recipient
 }
 
