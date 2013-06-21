@@ -1,6 +1,8 @@
 package engine
 
 import (
+  "time"
+
   "github.com/jeady/go-logging"
 )
 
@@ -35,6 +37,18 @@ func NewEngine(config_file string) *Engine {
 
 func (e *Engine) Rules() []Rule {
   return e.conf.Rules()
+}
+
+func (e *Engine) RulesToPoll(last_update time.Time) []Rule {
+  rules := []Rule{}
+
+  for _, r := range e.conf.Rules() {
+    if pr, ok := r.(PollingRule); ok && pr.ShouldPoll(last_update) {
+      rules = append(rules, r)
+    }
+  }
+
+  return rules
 }
 
 // Tests the rule and sends out a notification if the rule is not sane or has

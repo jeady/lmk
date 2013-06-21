@@ -3,9 +3,12 @@ package engine
 import (
   "regexp"
   "strconv"
+  "time"
 )
 
 type WebRule struct {
+  BasicPollingRule
+
   name string
 
   // Required params.
@@ -31,8 +34,7 @@ func NewWebRule(
   name string,
   url string,
   sanity_check string,
-  trigger_check string,
-  opts map[string]string) *WebRule {
+  trigger_check string) *WebRule {
 
   r := &WebRule{
     name:             name,
@@ -41,8 +43,8 @@ func NewWebRule(
     trigger_check:    trigger_check,
     trigger_on_match: true,
     url_fetcher:      &NetHttpFetcher{},
+    BasicPollingRule: *NewBasicPollingRule(time.Now(), 24*time.Hour),
   }
-  r.set_options(opts)
 
   var err error
   r.sanity_regex, err = regexp.Compile(sanity_check)
@@ -69,18 +71,23 @@ func (r *WebRule) Name() string {
   return r.name
 }
 
-func (r *WebRule) set_options(opts map[string]string) {
-  for k, v := range opts {
-    switch k {
+func (r *WebRule) SetOptions(
+  opts map[string]string) (unconsumed map[string]string) {
+  opts = r.BasicPollingRule.SetOptions(opts)
+  unconsumed = make(map[string]string)
+
+  for name, value := range opts {
+    switch name {
     case "trigger-on-match":
-      b, err := strconv.ParseBool(v)
+      b, err := strconv.ParseBool(value)
       if err == nil {
         r.trigger_on_match = b
       }
     default:
-      log.Warning("WebRule: Unknown option '%s'", k)
+      unconsumed[name] = value
     }
   }
+  return
 }
 
 func (r *WebRule) matches(content string, re *regexp.Regexp) bool {

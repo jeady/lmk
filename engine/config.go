@@ -69,10 +69,18 @@ func NewConfig(filename string) (*Config, error) {
       []string{"trigger-on-match"})
 
     if valid && enabled {
-      r := NewWebRule(name, url, sanity, trigger, opts)
+      r := NewWebRule(name, url, sanity, trigger)
       if r != nil {
         c.rules = append(c.rules, r)
         log.Notice("%s: Loaded WebRule", name)
+
+        leftover := r.SetOptions(opts)
+        if len(leftover) > 0 {
+          log.Notice("%s: Unused options:", name)
+          for k, v := range leftover {
+            log.Notice("  %s=%s", k, v)
+          }
+        }
       } else {
         log.Error(name + ": Unable to load WebRule")
       }

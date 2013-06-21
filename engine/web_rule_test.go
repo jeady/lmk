@@ -13,7 +13,7 @@ type WebRuleTest struct{}
 var _ = Suite(&WebRuleTest{})
 
 func (t *WebRuleTest) TestName(c *C) {
-  r := NewWebRule("a", "b", "c", "d", map[string]string{})
+  r := NewWebRule("a", "b", "c", "d")
 
   c.Check(r.Name(), Equals, "a")
 }
@@ -32,8 +32,7 @@ func test_web_rule(
     "test rule",
     s.URL,
     sanity,
-    trigger,
-    map[string]string{})
+    trigger)
 
   sane, triggered = r.TestTriggered()
   return
@@ -56,15 +55,17 @@ func (t *WebRuleTest) TestTriggers(c *C) {
 }
 
 func (t *WebRuleTest) TestTriggerOnMatch(c *C) {
-  r := NewWebRule("a", "b", "", "c", map[string]string{})
+  r := NewWebRule("a", "b", "", "c")
   c.Check(r.test_triggered("cat"), Equals, true)
 
-  r = NewWebRule("a", "b", "", "c", map[string]string{
+  r = NewWebRule("a", "b", "", "c")
+  r.SetOptions(map[string]string{
     "trigger-on-match": "true",
   })
   c.Check(r.test_triggered("cat"), Equals, true)
 
-  r = NewWebRule("a", "b", "", "c", map[string]string{
+  r = NewWebRule("a", "b", "", "c")
+  r.SetOptions(map[string]string{
     "trigger-on-match": "false",
   })
   c.Check(r.test_triggered("cat"), Equals, false)
@@ -82,8 +83,7 @@ func (t *WebRuleTest) TestHandleHttpFailures(c *C) {
     "test rule",
     s.URL,
     "cats",
-    "dogs",
-    map[string]string{})
+    "dogs")
 
   sane, triggered := r.TestTriggered()
   c.Check(sane, Equals, false)
