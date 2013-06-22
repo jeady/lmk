@@ -91,3 +91,11 @@ func (e *Engine) SetDefaultNotifier(n Notifier) Notifier {
   e.default_notifier = n
   return old
 }
+
+func (e *Engine) SetUrlFetcher(f UrlFetcher) {
+  for _, rule := range e.conf.Rules() {
+    if url_fetching_rule, ok := rule.(UrlFetchingRule); ok {
+      url_fetching_rule.SetUrlFetcher(f)
+    }
+  }
+}
