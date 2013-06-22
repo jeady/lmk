@@ -43,7 +43,9 @@ func NewWebRule(
     trigger_check:    trigger_check,
     trigger_on_match: true,
     url_fetcher:      &NetHttpFetcher{},
-    BasicPollingRule: *NewBasicPollingRule(time.Now(), 24*time.Hour),
+    BasicPollingRule: *NewBasicPollingRule(
+      time.Date(0, 0, 0, 24, 0, 0, 0, time.UTC),
+      24*time.Hour),
   }
 
   var err error
