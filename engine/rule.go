@@ -15,4 +15,6 @@ type UrlFetchingRule interface {
 
 type PollingRule interface {
   ShouldPoll(last_update time.Time) bool
+  LastDeadline() time.Time
+  NextDeadline() time.Time
 }

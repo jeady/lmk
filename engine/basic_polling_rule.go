@@ -16,15 +16,32 @@ func NewBasicPollingRule(
   }
 }
 
-func (r *BasicPollingRule) ShouldPoll(last_update time.Time) bool {
+func (r *BasicPollingRule) LastDeadline() time.Time {
   now := time.Now()
-  for r.offset.Before(now) {
-    r.offset = r.offset.Add(r.frequency)
+  deadline := r.offset
+
+  for deadline.Before(now) {
+    deadline = deadline.Add(r.frequency)
   }
-  for r.offset.After(now) {
-    r.offset = r.offset.Add(-r.frequency)
+  for deadline.After(now) {
+    deadline = deadline.Add(-r.frequency)
   }
-  return r.offset.After(last_update) && r.offset.Before(now)
+
+  return deadline
+}
+
+func (r *BasicPollingRule) NextDeadline() time.Time {
+  deadline := r.LastDeadline()
+  deadline = deadline.Add(r.frequency)
+
+  return deadline
+}
+
+func (r *BasicPollingRule) ShouldPoll(last_update time.Time) bool {
+  // Test to see if the last poll deadline was between the last update and now.
+  // If so, it should be triggered ASAP.
+  r.offset = r.LastDeadline()
+  return r.offset.After(last_update) && r.offset.Before(time.Now())
 }
 
 func (r *BasicPollingRule) SetOptions(

@@ -40,11 +40,19 @@ func (e *Engine) Rules() []Rule {
 }
 
 func (e *Engine) RulesToPoll(last_update time.Time) []Rule {
+  log.Debug("Last poll time " + last_update.String())
   rules := []Rule{}
 
   for _, r := range e.conf.Rules() {
-    if pr, ok := r.(PollingRule); ok && pr.ShouldPoll(last_update) {
-      rules = append(rules, r)
+    if pr, ok := r.(PollingRule); ok {
+      if pr.ShouldPoll(last_update) {
+        rules = append(rules, r)
+      } else {
+        log.Debug(
+          "%s will update in %s",
+          r.Name(),
+          pr.NextDeadline().Sub(time.Now()))
+      }
     }
   }
 
