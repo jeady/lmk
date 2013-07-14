@@ -46,7 +46,7 @@ func main() {
       cmd.Init(f)
 
       f.Parse(flag.Args()[1:])
-      e := NewEngine(config_filename)
+      e := NewEngineFromFile(config_filename)
 
       os.Exit(cmd.Main(e))
     }

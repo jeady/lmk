@@ -7,19 +7,15 @@ import (
 )
 
 type Engine struct {
-  conf             *Config
+  conf             Config
   default_notifier Notifier
 }
 
-func NewEngine(config_file string) *Engine {
+func NewEngine(conf Config) *Engine {
   var err error
-  e := new(Engine)
-  e.conf, err = NewConfig(config_file)
 
-  if e.conf == nil {
-    log.Error("Unable to load configuration file: " + err.Error())
-    return nil
-  }
+  e := new(Engine)
+  e.conf = conf
 
   e.default_notifier, err = e.conf.DefaultNotifier()
   if e.default_notifier == nil {
@@ -86,7 +82,7 @@ func (e *Engine) Run(r Rule) {
   }
 }
 
-func (e *Engine) Config() *Config {
+func (e *Engine) Config() Config {
   return e.conf
 }
 

@@ -9,14 +9,14 @@ import (
   . "launchpad.net/gocheck"
 )
 
-type ConfigTest struct{}
+type FileConfigTest struct{}
 
-var _ = Suite(&ConfigTest{})
+var _ = Suite(&FileConfigTest{})
 
 func load_config(
   config string,
   rules string,
-  c *C) (conf *Config, cleanup func()) {
+  c *C) (conf *FileConfig, cleanup func()) {
   var fconf, rconf *os.File
   var err error
 
@@ -39,13 +39,13 @@ func load_config(
   rconf.WriteString(rules + "\n")
   rconf.Sync()
 
-  conf, err = NewConfig(fconf.Name())
+  conf, err = NewFileConfig(fconf.Name())
   c.Assert(conf, Not(Equals), nil)
   c.Assert(err, Equals, nil)
   return
 }
 
-func (t *ConfigTest) TestParseLogLevel(c *C) {
+func (t *FileConfigTest) TestParseLogLevel(c *C) {
 
   // Wrapper function.
   test_log_level := func(in string, expected string) {
@@ -62,7 +62,7 @@ func (t *ConfigTest) TestParseLogLevel(c *C) {
   test_log_level("garbage=trash", "Notice")
 }
 
-func (t *ConfigTest) TestParseRuleConfig(c *C) {
+func (t *FileConfigTest) TestParseRuleFileConfig(c *C) {
   memlog := new(TestingLogger)
   logging.SetBackend(memlog)
   defer logging.SetBackend(
@@ -71,7 +71,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   logging.SetLevel(logging.DEBUG, log.Module)
   var foo, bar, baz string
 
-  test_parse_rule_config := func(rules string, check func(conf *Config)) {
+  test_parse_rule_config := func(rules string, check func(conf *FileConfig)) {
     foo = ""
     bar = ""
     baz = ""
@@ -85,7 +85,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   // All present and account for.
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123\nenabled=true",
-    func(conf *Config) {
+    func(conf *FileConfig) {
       valid, enabled, opts := conf.parse_rule_config(
         "RuleA",
         map[string]*string{
@@ -105,7 +105,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   // Bunch of extra fields.
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123\nenabled=true",
-    func(conf *Config) {
+    func(conf *FileConfig) {
       valid, enabled, opts := conf.parse_rule_config(
         "RuleA",
         map[string]*string{},
@@ -121,7 +121,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   // Missing required field.
   test_parse_rule_config(
     "[RuleA]\nenabled=true",
-    func(conf *Config) {
+    func(conf *FileConfig) {
       valid, enabled, opts := conf.parse_rule_config(
         "RuleA",
         map[string]*string{
@@ -137,7 +137,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   // Disabled due to missing enabled field.
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123",
-    func(conf *Config) {
+    func(conf *FileConfig) {
       valid, enabled, opts := conf.parse_rule_config(
         "RuleA",
         map[string]*string{
@@ -157,7 +157,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   // Disabled due to enabled=false.
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123\nenabled=false",
-    func(conf *Config) {
+    func(conf *FileConfig) {
       valid, enabled, opts := conf.parse_rule_config(
         "RuleA",
         map[string]*string{
@@ -177,7 +177,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   // Mising section.
   test_parse_rule_config(
     "[RuleB]\nfoo=abc\nbar=def\nbaz=123\nenabled=true",
-    func(conf *Config) {
+    func(conf *FileConfig) {
       valid, enabled, opts := conf.parse_rule_config(
         "RuleA",
         map[string]*string{
@@ -197,7 +197,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
   // Optional fields.
   test_parse_rule_config(
     "[RuleA]\nfoo=abc\nbar=def\nbaz=123\nenabled=true\nhello=goodbye",
-    func(conf *Config) {
+    func(conf *FileConfig) {
       valid, enabled, opts := conf.parse_rule_config(
         "RuleA",
         map[string]*string{
@@ -217,7 +217,7 @@ func (t *ConfigTest) TestParseRuleConfig(c *C) {
 
 }
 
-func (t *ConfigTest) TestConfigFileDoesNotExist(c *C) {
+func (t *FileConfigTest) TestFileConfigFileDoesNotExist(c *C) {
   dir, err := ioutil.TempDir("", "")
   c.Check(err, Equals, nil)
 
@@ -225,12 +225,12 @@ func (t *ConfigTest) TestConfigFileDoesNotExist(c *C) {
   _, err = os.Stat(fname)
   c.Assert(err, Not(Equals), nil)
 
-  conf, err := NewConfig(fname)
-  c.Check(conf, Equals, (*Config)(nil))
+  conf, err := NewFileConfig(fname)
+  c.Check(conf, Equals, (*FileConfig)(nil))
   c.Check(err, Not(Equals), nil)
 }
 
-func (t *ConfigTest) TestLoadsWebRules(c *C) {
+func (t *FileConfigTest) TestLoadsWebRules(c *C) {
   // Valid rule.
   conf, cleanup := load_config(
     "loglevel=debug",
@@ -269,7 +269,7 @@ func (t *ConfigTest) TestLoadsWebRules(c *C) {
 }
 
 // Tests loading multiple rules, rules of different types.
-func (t *ConfigTest) TestLoadsRules(c *C) {
+func (t *FileConfigTest) TestLoadsRules(c *C) {
   conf, cleanup := load_config(
     "loglevel=debug",
     "[the rule]\n"+
