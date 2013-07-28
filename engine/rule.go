@@ -10,10 +10,12 @@ type Rule interface {
 }
 
 type UrlFetchingRule interface {
+  Rule
   SetUrlFetcher(f UrlFetcher) UrlFetcher
 }
 
 type PollingRule interface {
+  Rule
   ShouldPoll(last_update time.Time) bool
   LastDeadline() time.Time
   NextDeadline() time.Time

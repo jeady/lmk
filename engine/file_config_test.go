@@ -4,6 +4,7 @@ import (
   "io/ioutil"
   go_log "log"
   "os"
+  "path/filepath"
 
   "github.com/jeady/go-logging"
   . "launchpad.net/gocheck"
@@ -34,7 +35,8 @@ func load_config(
   }
 
   // Trailing \n is required by go-config issue #3.
-  fconf.WriteString("[Settings]\n" + config + "\n" + "rules=" + rconf.Name() + "\n")
+  fconf.WriteString(
+    "[Settings]\n" + config + "\n" + "rules=" + rconf.Name() + "\n")
   fconf.Sync()
   rconf.WriteString(rules + "\n")
   rconf.Sync()
@@ -99,7 +101,7 @@ func (t *FileConfigTest) TestParseRuleFileConfig(c *C) {
       c.Check(foo, Equals, "abc")
       c.Check(bar, Equals, "def")
       c.Check(baz, Equals, "123")
-      c.Check(len(opts), Equals, 0)
+      c.Check(opts, HasLen, 0)
     })
 
   // Bunch of extra fields.
@@ -115,7 +117,7 @@ func (t *FileConfigTest) TestParseRuleFileConfig(c *C) {
       c.Check(memlog.Logs(), Matches, `[\s\S]*foo[\s\S]*`)
       c.Check(memlog.Logs(), Matches, `[\s\S]*bar[\s\S]*`)
       c.Check(memlog.Logs(), Matches, `[\s\S]*baz[\s\S]*`)
-      c.Check(len(opts), Equals, 0)
+      c.Check(opts, HasLen, 0)
     })
 
   // Missing required field.
@@ -131,7 +133,7 @@ func (t *FileConfigTest) TestParseRuleFileConfig(c *C) {
       c.Check(valid, Equals, false)
       c.Check(enabled, Equals, true)
       c.Check(foo, Equals, "")
-      c.Check(len(opts), Equals, 0)
+      c.Check(opts, HasLen, 0)
     })
 
   // Disabled due to missing enabled field.
@@ -151,7 +153,7 @@ func (t *FileConfigTest) TestParseRuleFileConfig(c *C) {
       c.Check(foo, Equals, "abc")
       c.Check(bar, Equals, "def")
       c.Check(baz, Equals, "123")
-      c.Check(len(opts), Equals, 0)
+      c.Check(opts, HasLen, 0)
     })
 
   // Disabled due to enabled=false.
@@ -171,7 +173,7 @@ func (t *FileConfigTest) TestParseRuleFileConfig(c *C) {
       c.Check(foo, Equals, "abc")
       c.Check(bar, Equals, "def")
       c.Check(baz, Equals, "123")
-      c.Check(len(opts), Equals, 0)
+      c.Check(opts, HasLen, 0)
     })
 
   // Mising section.
@@ -191,7 +193,7 @@ func (t *FileConfigTest) TestParseRuleFileConfig(c *C) {
       c.Check(foo, Equals, "")
       c.Check(bar, Equals, "")
       c.Check(baz, Equals, "")
-      c.Check(len(opts), Equals, 0)
+      c.Check(opts, HasLen, 0)
     })
 
   // Optional fields.
@@ -211,7 +213,7 @@ func (t *FileConfigTest) TestParseRuleFileConfig(c *C) {
       c.Check(foo, Equals, "abc")
       c.Check(bar, Equals, "def")
       c.Check(baz, Equals, "123")
-      c.Check(len(opts), Equals, 1)
+      c.Check(opts, HasLen, 1)
       c.Check(opts["hello"], Equals, "goodbye")
     })
 
@@ -230,6 +232,62 @@ func (t *FileConfigTest) TestFileConfigFileDoesNotExist(c *C) {
   c.Check(err, Not(Equals), nil)
 }
 
+func (t *FileConfigTest) TestLoadsRelativeRulesPath(c *C) {
+  var fconf, rconf *os.File
+  var err error
+  var conf Config
+
+  fconf, err = ioutil.TempFile("", "")
+  if err != nil {
+    panic(err)
+  }
+  rconf, err = ioutil.TempFile("", "")
+  if err != nil {
+    panic(err)
+  }
+  defer (func() {
+    fconf.Close()
+    rconf.Close()
+  })()
+
+  path, _ := filepath.Rel(filepath.Dir(fconf.Name()), rconf.Name())
+
+  // Trailing \n is required by go-config issue #3.
+  fconf.WriteString("[Settings]\nloglevel=debug\nrules=" + path + "\n")
+  fconf.Sync()
+
+  conf, err = NewFileConfig(fconf.Name())
+  c.Assert(conf, Not(Equals), nil)
+  c.Assert(err, Equals, nil)
+}
+
+func (t *FileConfigTest) TestRulesFileDoesNotExist(c *C) {
+  var fconf, rconf *os.File
+  var err error
+  var conf Config
+
+  fconf, err = ioutil.TempFile("", "")
+  if err != nil {
+    panic(err)
+  }
+  rconf, err = ioutil.TempFile("", "")
+  if err != nil {
+    panic(err)
+  }
+  defer (func() {
+    fconf.Close()
+    rconf.Close()
+  })()
+
+  // Trailing \n is required by go-config issue #3.
+  fconf.WriteString("[Settings]\nloglevel=debug\nrules=\n")
+  fconf.Sync()
+
+  conf, err = NewFileConfig(fconf.Name())
+  c.Check(conf, Equals, (*FileConfig)(nil))
+  c.Check(err, Not(Equals), nil)
+}
+
 func (t *FileConfigTest) TestLoadsWebRules(c *C) {
   // Valid rule.
   conf, cleanup := load_config(
@@ -242,7 +300,7 @@ func (t *FileConfigTest) TestLoadsWebRules(c *C) {
     c)
   defer func(c func()) { c() }(cleanup)
 
-  c.Assert(len(conf.Rules()), Equals, 1)
+  c.Assert(conf.Rules(), HasLen, 1)
   c.Check(conf.Rules()[0].Name(), Equals, "the rule")
 
   // Invalid rules.
@@ -265,7 +323,7 @@ func (t *FileConfigTest) TestLoadsWebRules(c *C) {
     c)
   defer func(c func()) { c() }(cleanup)
 
-  c.Assert(len(conf.Rules()), Equals, 0)
+  c.Assert(conf.Rules(), HasLen, 0)
 }
 
 // Tests loading multiple rules, rules of different types.
@@ -286,7 +344,7 @@ func (t *FileConfigTest) TestLoadsRules(c *C) {
     c)
   defer func(c func()) { c() }(cleanup)
 
-  c.Assert(len(conf.Rules()), Equals, 2)
+  c.Assert(conf.Rules(), HasLen, 2)
   c.Check(conf.Rules()[0].Name(), Equals, "the rule")
   c.Check(conf.Rules()[1].Name(), Equals, "the rule 2")
 
@@ -306,6 +364,29 @@ func (t *FileConfigTest) TestLoadsRules(c *C) {
     c)
   defer func(c func()) { c() }(cleanup)
 
-  c.Assert(len(conf.Rules()), Equals, 1)
+  c.Assert(conf.Rules(), HasLen, 1)
   c.Check(conf.Rules()[0].Name(), Equals, "the rule 2")
+}
+
+func (t *FileConfigTest) TestCreateSmtpNotifier(c *C) {
+  conf, cleanup := load_config(
+    "loglevel=debug",
+    "",
+    c)
+  defer func(c func()) { c() }(cleanup)
+
+  notifier, err := conf.DefaultNotifier()
+  c.Check(notifier, Equals, Notifier(nil))
+  c.Check(err, Not(Equals), nil)
+
+  conf, cleanup = load_config(
+    "loglevel=debug\nsmtp_user=jon\nsmtp_pass=snow\nsmtp_host=a.com:1234",
+    "",
+    c)
+  defer func(c func()) { c() }(cleanup)
+
+  notifier, err = conf.DefaultNotifier()
+  c.Check(notifier, Not(Equals), Notifier(nil))
+  c.Check(err, Equals, nil)
+
 }
