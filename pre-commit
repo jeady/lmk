@@ -12,10 +12,10 @@ fi
 rm .lmk
 
 echo "Testing..."
-go test github.com/jeady/lmk/... >/dev/null 2>&1
+go test github.com/jeady/lmk/engine >/dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  go test github.com/jeady/lmk/... 1>&2
+  go test github.com/jeady/lmk/engine 1>&2
   echo >&2 "Failed to run tests. Please fix before committing."
   exit 1
 fi
