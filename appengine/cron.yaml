@@ -1,0 +1,4 @@
+cron:
+- description: Periodically check for rules that should be polled.
+  url: /poll
+  schedule: every 5 minutes
